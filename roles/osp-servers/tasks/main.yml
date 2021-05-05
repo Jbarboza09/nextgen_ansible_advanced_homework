@@ -1,3 +1,30 @@
 ---
 
 # tasks file for osp.servers
+
+- name: Create Multi Tier App Servers
+  os_server:
+    cloud: "{{ item.value.cloud_name | default('ospcloud') }}"
+    name: "{{ item.value.name }}"
+    image: "{{ item.value.image }}"
+    key_name: "{{ item.value.key_name }}"
+    flavor: "{{ item.value.flavor }}"
+    security_groups: "{{ item.value.security_group }}"
+    wait: "{{ item.value.wait | default('no') }}"
+    nics:
+      - net-name: "{{ item.value.nic | default('int_network') }}"
+    meta:
+      group: "{{ item.value.meta[0].group }}"
+      deployment_name: "{{ item.value.meta[0].deployment_name }}"
+  with_dict: "{{ osp_servers }}"
+
+- name: Add floating IP to each Server
+    os_floating_ip:
+      cloud: "{{ item.value.cloud_name | default('ospcloud') }}"
+      state: "{{ item.value.stat }}"
+      reuse: yes
+      server: "{{ item.value.name }}"
+      network: ext_network
+      wait: true
+      timeout: 200
+    with_dict: "{{ osp_servers }}"
